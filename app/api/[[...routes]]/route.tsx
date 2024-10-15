@@ -10,7 +10,6 @@ type State = {
   f: number;
   m: number;
   k: number;
-  id: string;
 };
 
 type FmkStats = {
@@ -29,14 +28,14 @@ const app = new Frog<{ State: State }>({
     f: -1,
     m: -1,
     k: -1,
-    id: "undefined",
   },
   // Supply a Hub to enable frame verification.
   // hub: neynar({ apiKey: 'NEYNAR_FROG_FM' })
 });
 
-app.frame("/", (c) => {
+app.frame("/start/:id", (c) => {
   const options = ["horsefacts", "varun", "dan"];
+  const id = c.req.param('id')
 
   return c.res({
     image: (
@@ -101,12 +100,13 @@ app.frame("/", (c) => {
         </div>
       </div>
     ),
-    intents: [<Button action="/f">Start</Button>],
+    intents: [<Button action={`/f/${id}`}>Start</Button>],
   });
 });
 
-app.frame("/f", (c) => {
+app.frame("/f/:id", (c) => {
   const options = ["horsefacts", "varun", "dan"];
+  const id = c.req.param('id')
 
   return c.res({
     image: (
@@ -172,23 +172,23 @@ app.frame("/f", (c) => {
       </div>
     ),
     intents: [
-      <Button action="/m" value="0">
+      <Button action={`/m/${id}`} value="0">
         {options[0]}
       </Button>,
-      <Button action="/m" value="1">
+      <Button action={`/m/${id}`} value="1">
         {options[1]}
       </Button>,
-      <Button action="/m" value="2">
+      <Button action={`/m/${id}`} value="2">
         {options[2]}
       </Button>,
     ],
   });
 });
 
-app.frame("/m", (c) => {
+app.frame("/m/:id", (c) => {
   let options = ["horsefacts", "varun", "dan"];
   const index = parseInt(c.buttonValue!);
-  options.splice(index, 1);
+  const id = c.req.param('id')
 
   const { deriveState } = c;
   const state = deriveState((previousState) => {
@@ -260,7 +260,7 @@ app.frame("/m", (c) => {
     ),
     intents: [
       ...options.map((option, index) => (
-        <Button key={index} action="/end" value={index.toString()}>
+        <Button key={index} action={`/end/${id}`} value={index.toString()}>
           {option}
         </Button>
       )),
@@ -268,8 +268,9 @@ app.frame("/m", (c) => {
   });
 });
 
-app.frame("/end", (c) => {
+app.frame("/end/:id", (c) => {
   let options = ["horsefacts", "varun", "dan"];
+  const id = c.req.param('id')
   const index = parseInt(c.buttonValue!);
   const { deriveState } = c;
   const state = deriveState((previousState) => {
@@ -279,8 +280,6 @@ app.frame("/end", (c) => {
       (i) => i !== index && i !== previousState.f
     )[0]; // use previous inputs to compute k
   });
-
-  console.log("state", state);
 
   const fuck = options[state.f];
   const marry = options[state.m];
@@ -386,16 +385,16 @@ app.frame("/end", (c) => {
       </div>
     ),
     intents: [
-      <Button action="/res">Results</Button>,
-      <Button action="/f">Change Pick</Button>,
+      <Button action={`/res/${id}`}>Results</Button>,
+      <Button action={`/f/${id}`}>Change Pick</Button>,
     ],
   });
 });
 
-app.frame("/res", (c) => {
+app.frame("/res/:id", (c) => {
   let options = ["horsefacts", "varun", "dan"];
-  const { previousState } = c;
-  const fmkId = previousState.id;
+
+  const id = c.req.param('id')
 
   // Define fmkStats with the correct type
   const fmkStats: FmkStats = {
@@ -467,7 +466,7 @@ app.frame("/res", (c) => {
         </div>
       </div>
     ),
-    intents: [<Button action="/res">Share</Button>],
+    intents: [<Button.Link href={`https://warpcast.com/~/compose?text=I+just+played+ponder+FMK!+Here's+the+results,+play+by+using+the+frame!&embeds[]=${c.req.url}`}>Share</Button.Link>],
   });
 });
 
