@@ -1,5 +1,5 @@
 /** @jsxImportSource frog/jsx */
-
+import { getGameData, updateStats } from "@/app/utils/redis";
 import { Button, Frog } from "frog";
 import { devtools } from "frog/dev";
 // import { neynar } from 'frog/hubs'
@@ -33,9 +33,10 @@ const app = new Frog<{ State: State }>({
   // hub: neynar({ apiKey: 'NEYNAR_FROG_FM' })
 });
 
-app.frame("/start/:id", (c) => {
-  const options = ["horsefacts", "varun", "dan"];
-  const id = c.req.param('id')
+app.frame("/start/:id", async (c) => {
+  const id = c.req.param("id");
+  const gameData = await getGameData(id);
+  const options = [gameData.option1, gameData.option2, gameData.option3];
 
   return c.res({
     image: (
@@ -104,9 +105,10 @@ app.frame("/start/:id", (c) => {
   });
 });
 
-app.frame("/f/:id", (c) => {
-  const options = ["horsefacts", "varun", "dan"];
-  const id = c.req.param('id')
+app.frame("/f/:id", async (c) => {
+  const id = c.req.param("id");
+  const gameData = await getGameData(id);
+  const options = [gameData.option1, gameData.option2, gameData.option3];
 
   return c.res({
     image: (
@@ -185,11 +187,12 @@ app.frame("/f/:id", (c) => {
   });
 });
 
-app.frame("/m/:id", (c) => {
-  let options = ["horsefacts", "varun", "dan"];
-  const index = parseInt(c.buttonValue!);
-  const id = c.req.param('id')
+app.frame("/m/:id", async (c) => {
+  const id = c.req.param("id");
+  const gameData = await getGameData(id);
+  const options = [gameData.option1, gameData.option2, gameData.option3];
 
+  const index = parseInt(c.buttonValue!);
   const { deriveState } = c;
   const state = deriveState((previousState) => {
     previousState.f = index;
@@ -268,24 +271,28 @@ app.frame("/m/:id", (c) => {
   });
 });
 
-app.frame("/end/:id", (c) => {
-  let options = ["horsefacts", "varun", "dan"];
-  const id = c.req.param('id')
+app.frame("/end/:id", async (c) => {
+  const id = c.req.param("id");
+  const gameData = await getGameData(id);
+  const options = [gameData.option1, gameData.option2, gameData.option3];
+
   const index = parseInt(c.buttonValue!);
   const { deriveState } = c;
   const state = deriveState((previousState) => {
-    console.log("previousState", previousState);
     previousState.m = index;
     previousState.k = [0, 1, 2].filter(
       (i) => i !== index && i !== previousState.f
     )[0]; // use previous inputs to compute k
   });
 
+  console.log(`state /end/${id}`, state);
   const fuck = options[state.f];
   const marry = options[state.m];
   const kill = options[state.k];
 
-  // todo add FMK to backend aggregation / redis
+  await updateStats(id, `option${state.f + 1}`, "f");
+  await updateStats(id, `option${state.m + 1}`, "m");
+  await updateStats(id, `option${state.k + 1}`, "k");
 
   return c.res({
     image: (
@@ -391,29 +398,10 @@ app.frame("/end/:id", (c) => {
   });
 });
 
-app.frame("/res/:id", (c) => {
-  let options = ["horsefacts", "varun", "dan"];
-
-  const id = c.req.param('id')
-
-  // Define fmkStats with the correct type
-  const fmkStats: FmkStats = {
-    option0: {
-      f: 1000,
-      m: 500,
-      k: 2000,
-    },
-    option1: {
-      f: 1000,
-      m: 500,
-      k: 2000,
-    },
-    option2: {
-      f: 1000,
-      m: 500,
-      k: 2000,
-    },
-  };
+app.frame("/res/:id", async (c) => {
+  const id = c.req.param("id");
+  const gameData = await getGameData(id);
+  const options = [gameData.option1, gameData.option2, gameData.option3];
 
   return c.res({
     image: (
@@ -441,32 +429,41 @@ app.frame("/res/:id", (c) => {
             width: "100%",
           }}
         >
-          {options.map((option, index) => (
-            <div
-              key={index}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                padding: "0 100px",
-              }}
-            >
-              <h1 style={{ color: "white", fontSize: "50px" }}>{option}</h1>
-              <p style={{ color: "white", fontSize: "35px" }}>
-                Fuck: {fmkStats[`option${index}`].f}
-              </p>
-              <p style={{ color: "white", fontSize: "35px" }}>
-                Marry: {fmkStats[`option${index}`].m}
-              </p>
-              <p style={{ color: "white", fontSize: "35px" }}>
-                Kill: {fmkStats[`option${index}`].k}
-              </p>
-            </div>
-          ))}
+          {options.map((option, index) => {
+            const stats = gameData.stats[`option${index + 1}`]; // Access stats directly
+            return (
+              <div
+                key={index}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  padding: "0 100px",
+                }}
+              >
+                <h1 style={{ color: "white", fontSize: "50px" }}>{option}</h1>
+                <p style={{ color: "white", fontSize: "35px" }}>
+                  {`Fuck: ${stats.f}`}
+                </p>
+                <p style={{ color: "white", fontSize: "35px" }}>
+                  {`Marry: ${stats.m}`}
+                </p>
+                <p style={{ color: "white", fontSize: "35px" }}>
+                  {`Kill: ${stats.k}`}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     ),
-    intents: [<Button.Link href={`https://warpcast.com/~/compose?text=I+just+played+ponder+FMK!+Here's+the+results,+play+by+using+the+frame!&embeds[]=${c.req.url}`}>Share</Button.Link>],
+    intents: [
+      <Button.Link
+        href={`https://warpcast.com/~/compose?text=I+just+played+ponder+FMK!+Here's+the+results,+play+by+using+the+frame!&embeds[]=${c.req.url}`}
+      >
+        Share
+      </Button.Link>,
+    ],
   });
 });
 
