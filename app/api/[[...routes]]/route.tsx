@@ -13,6 +13,14 @@ type State = {
   id: string;
 };
 
+type FmkStats = {
+  [key: string]: {
+    f: number;
+    m: number;
+    k: number;
+  };
+};
+
 const app = new Frog<{ State: State }>({
   title: "Ponder FMK",
   assetsPath: "/",
@@ -278,6 +286,8 @@ app.frame("/end", (c) => {
   const marry = options[state.m];
   const kill = options[state.k];
 
+  // todo add FMK to backend aggregation / redis
+
   return c.res({
     image: (
       <div
@@ -379,6 +389,85 @@ app.frame("/end", (c) => {
       <Button action="/res">Results</Button>,
       <Button action="/f">Change Pick</Button>,
     ],
+  });
+});
+
+app.frame("/res", (c) => {
+  let options = ["horsefacts", "varun", "dan"];
+  const { previousState } = c;
+  const fmkId = previousState.id;
+
+  // Define fmkStats with the correct type
+  const fmkStats: FmkStats = {
+    option0: {
+      f: 1000,
+      m: 500,
+      k: 2000,
+    },
+    option1: {
+      f: 1000,
+      m: 500,
+      k: 2000,
+    },
+    option2: {
+      f: 1000,
+      m: 500,
+      k: 2000,
+    },
+  };
+
+  return c.res({
+    image: (
+      <div
+        style={{
+          alignItems: "center",
+          background: "linear-gradient(to right, #432889, #17101F)",
+          backgroundSize: "100% 100%",
+          display: "flex",
+          flexDirection: "column",
+          flexWrap: "nowrap",
+          height: "100%",
+          justifyContent: "center",
+          textAlign: "center",
+          width: "100%",
+        }}
+      >
+        <div style={{ color: "white", fontSize: "70px", marginBottom: "20px" }}>
+          FMK Results
+        </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            width: "100%",
+          }}
+        >
+          {options.map((option, index) => (
+            <div
+              key={index}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                padding: "0 100px",
+              }}
+            >
+              <h1 style={{ color: "white", fontSize: "50px" }}>{option}</h1>
+              <p style={{ color: "white", fontSize: "35px" }}>
+                Fuck: {fmkStats[`option${index}`].f}
+              </p>
+              <p style={{ color: "white", fontSize: "35px" }}>
+                Marry: {fmkStats[`option${index}`].m}
+              </p>
+              <p style={{ color: "white", fontSize: "35px" }}>
+                Kill: {fmkStats[`option${index}`].k}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+    intents: [<Button action="/res">Share</Button>],
   });
 });
 
