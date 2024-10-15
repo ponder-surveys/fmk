@@ -20,7 +20,6 @@ image_ponder_fmk_frame:
     - |
       if [ "$CI_COMMIT_REF_NAME" = "master" ]; then
         docker tag $PONDER_FMK_FRAME_IMAGE:$CI_COMMIT_REF_NAME $PONDER_FMK_FRAME_IMAGE:latest
-        docker push $PONDER_FMK_FRAME_IMAGE:latest
       fi
   only:
     changes:
