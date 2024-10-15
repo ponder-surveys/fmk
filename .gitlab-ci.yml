@@ -1,0 +1,27 @@
+# .gitlab-ci.yml
+stages:
+  - build
+  - push
+
+variables:
+  PONDER_FMK_FRAME_IMAGE: $DOCKER_REGISTRY/ponder-fmk-frame
+
+before_script:
+  - echo $DOCKER_PASSWORD | docker login $DOCKER_REGISTRY -u $DOCKER_USERNAME --password-stdin
+
+image_ponder_fmk_frame:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker build -t $PONDER_FMK_FRAME_IMAGE:$CI_COMMIT_REF_NAME -f Dockerfile .
+    - docker push $PONDER_FMK_FRAME_IMAGE:$CI_COMMIT_REF_NAME
+    - |
+      if [ "$CI_COMMIT_REF_NAME" = "master" ]; then
+        docker tag $PONDER_FMK_FRAME_IMAGE:$CI_COMMIT_REF_NAME $PONDER_FMK_FRAME_IMAGE:latest
+        docker push $PONDER_FMK_FRAME_IMAGE:latest
+      fi
+  only:
+    changes:
+      - app/**/*
