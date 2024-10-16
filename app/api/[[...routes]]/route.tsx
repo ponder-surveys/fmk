@@ -290,9 +290,10 @@ app.frame("/end/:id", async (c) => {
   const marry = options[state.m];
   const kill = options[state.k];
 
-  await updateStats(id, `option${state.f + 1}`, "f");
-  await updateStats(id, `option${state.m + 1}`, "m");
-  await updateStats(id, `option${state.k + 1}`, "k");
+  const fState =  updateStats(id, `option${state.f + 1}`, "f");
+  const mState =  updateStats(id, `option${state.m + 1}`, "m");
+  const kState =  updateStats(id, `option${state.k + 1}`, "k");
+  await Promise.all([fState, mState, kState]);
 
   return c.res({
     image: (
