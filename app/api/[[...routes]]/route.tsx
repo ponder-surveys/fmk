@@ -38,6 +38,12 @@ app.frame("/start/:id", async (c) => {
   const gameData = await getGameData(id);
   const options = [gameData.option1, gameData.option2, gameData.option3];
 
+  // title of the frame (shown above the options)
+  let title = 'FMK'
+  if(gameData.skin == 'los-fomos')
+    title = 'Kiss Marry Kill'
+    
+
   return c.res({
     image: (
       <div
@@ -66,7 +72,7 @@ app.frame("/start/:id", async (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          {"FMK"}
+          {title}
         </div>
         <div
           style={{
@@ -110,6 +116,11 @@ app.frame("/f/:id", async (c) => {
   const gameData = await getGameData(id);
   const options = [gameData.option1, gameData.option2, gameData.option3];
 
+  // title of the frame (shown above the options)
+  let title = 'Who to Fuck?'
+  if(gameData.skin == 'los-fomos')
+    title = 'Who to Kiss?'
+
   return c.res({
     image: (
       <div
@@ -138,7 +149,7 @@ app.frame("/f/:id", async (c) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          {"Who to Fuck?"}
+          {title}
         </div>
         <div
           style={{
@@ -191,6 +202,12 @@ app.frame("/m/:id", async (c) => {
   const id = c.req.param("id");
   const gameData = await getGameData(id);
   const options = [gameData.option1, gameData.option2, gameData.option3];
+
+  // title of the frame (shown above the options)
+  let title = 'Who to Marry?'
+  // los Fomos also has Marry, no check needed. Included comments for completeness
+  // if(gameData.skin == 'los-fomos')
+  //   title = 'Who to Marry?'
 
   const index = parseInt(c.buttonValue!);
   const { deriveState } = c;
@@ -276,6 +293,16 @@ app.frame("/end/:id", async (c) => {
   const gameData = await getGameData(id);
   const options = [gameData.option1, gameData.option2, gameData.option3];
 
+  // title of the frame (shown above the options)
+  let title = 'You picked'
+  let fuckStr = 'Fuck'
+  let marryStr = 'Marry'
+  let killStr = 'Kill'
+  if(gameData.skin == 'los-fomos') {
+    title = 'Your spicy picks'
+    fuckStr = 'Kiss'
+  }
+
   const index = parseInt(c.buttonValue!);
   const { deriveState } = c;
   const state = deriveState((previousState) => {
@@ -326,7 +353,7 @@ app.frame("/end/:id", async (c) => {
             width: "100%",
           }}
         >
-          {"You picked"}
+          {title}
         </div>
         <div
           style={{
@@ -356,7 +383,7 @@ app.frame("/end/:id", async (c) => {
                 width: "100%",
               }}
             >
-              Fuck: {fuck}
+              {fuckStr}: {fuck}
             </div>
             <div
               style={{
@@ -371,7 +398,7 @@ app.frame("/end/:id", async (c) => {
                 width: "100%",
               }}
             >
-              Marry: {marry}
+              {marryStr}: {marry}
             </div>
             <div
               style={{
@@ -386,7 +413,7 @@ app.frame("/end/:id", async (c) => {
                 width: "100%",
               }}
             >
-              Kill: {kill}
+              {killStr}: {kill}
             </div>
           </div>
         </div>
@@ -403,6 +430,11 @@ app.frame("/res/:id", async (c) => {
   const id = c.req.param("id");
   const gameData = await getGameData(id);
   const options = [gameData.option1, gameData.option2, gameData.option3];
+
+  // title of the frame (shown above the options)
+  let title = 'FMK Results'
+  if(gameData.skin == 'los-fomos')
+    title = 'KMK Results'
 
   return c.res({
     image: (
@@ -421,7 +453,7 @@ app.frame("/res/:id", async (c) => {
         }}
       >
         <div style={{ color: "white", fontSize: "70px", marginBottom: "20px" }}>
-          FMK Results
+          {title}
         </div>
         <div
           style={{
